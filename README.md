@@ -1,0 +1,2 @@
+# godice
+Pixel Dice Library
