@@ -28,7 +28,7 @@ func MainPixelSdk(haUrl string, haToken string) {
 	die := &pixel.Die{}
 	must("enable BLE stack", adapter.Enable())
 	must("connect", die.Connect(adapter))
-	must("who are you", die.SendWhoAreYou())
+	must("who are you", die.SendMsg(pixel.MessageWhoAreYou{}))
 	//red := color.RGBA{255, 0, 0, 255}
 	time.Sleep(3 * time.Second)
 	red := cn.Purple
@@ -67,8 +67,10 @@ func dieWatcher(die *pixel.Die, haClient *ha.HAClient) {
 				})
 			} else if die.CurrentFaceValue >= 15 {
 				haClient.LightColor(target, cn.Royalblue)
-			} else if die.CurrentFaceValue >= 5 {
+			} else if die.CurrentFaceValue >= 10 {
 				haClient.LightColor(target, cn.Green)
+			} else if die.CurrentFaceValue >= 5 {
+				haClient.LightColor(target, cn.Orange)
 			} else if die.CurrentFaceValue > 1 {
 				haClient.LightColor(target, cn.Red)
 			} else {
@@ -76,8 +78,10 @@ func dieWatcher(die *pixel.Die, haClient *ha.HAClient) {
 			}
 			lastUpdated = die.LastUpdated
 		}
+		time.Sleep(500 * time.Millisecond)
 		haClient.LightTemperature(target, 2500)
 		time.Sleep(5 * time.Second)
+
 	}
 
 }
