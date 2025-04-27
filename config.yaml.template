@@ -1,3 +1,5 @@
 ha:
   token: ""
   url: ""
+  light_entities:
+    - "light.blamp"
