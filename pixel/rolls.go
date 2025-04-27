@@ -23,5 +23,5 @@ func (die *Die) readRollStateMessage(msg MessageRollState) {
 	die.rollState = msg.RollState
 	die.CurrentFaceIndex = msg.CurrentFaceIndex
 	die.CurrentFaceValue = msg.CurrentFaceValue
-	die.LastUpdated = time.Now()
+	die.LastRolled = time.Now()
 }

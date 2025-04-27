@@ -1,7 +1,5 @@
 package pixel
 
-import "time"
-
 type MessageBatteryLevel struct {
 	Id           uint8
 	BatteryLevel uint8
@@ -25,5 +23,4 @@ func (die *Die) readBatteryBuffer(buf []byte) {
 func (die *Die) readBatteryMsg(msg MessageBatteryLevel) {
 	die.batteryLevel = msg.BatteryLevel
 	die.batteryCharging = msg.BatteryState == BattStateCharging
-	die.LastUpdated = time.Now()
 }

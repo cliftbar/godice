@@ -41,7 +41,7 @@ func parseIAmADieMessage(buf []byte) MessageIAmADie {
 }
 
 func (die *Die) readIAmADieMsg(msg MessageIAmADie) {
-	die.pixelId = msg.PixelId
+	die.PixelId = msg.PixelId
 	die.ledCount = msg.LedCount
 	die.designAndColor = msg.DesignAndColor
 	die.CurrentFaceIndex = msg.CurrentFaceIndex
@@ -50,5 +50,5 @@ func (die *Die) readIAmADieMsg(msg MessageIAmADie) {
 	die.batteryLevel = msg.BatteryLevel
 	die.buildTimestamp = msg.BuildTimestamp
 	die.batteryCharging = msg.BatteryState == BattStateCharging
-	die.LastUpdated = time.Now()
+	die.LastRolled = time.Now()
 }
