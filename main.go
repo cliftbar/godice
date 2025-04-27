@@ -5,16 +5,18 @@ import (
 	"godice/config"
 	ha "godice/homeassistiant"
 	"godice/pixel"
-	"golang.org/x/image/colornames"
+	cn "golang.org/x/image/colornames"
 	"image/color"
 	"time"
 	"tinygo.org/x/bluetooth"
 )
 
+var conf, confErr = config.LoadConfig("config.yaml")
+
 func main() {
-	conf, err := config.LoadConfig("config.yaml")
-	if err != nil {
-		panic(err)
+
+	if confErr != nil {
+		panic(confErr)
 	}
 	MainPixelSdk(conf.HAConfig.URL, conf.HAConfig.Token)
 }
@@ -29,8 +31,8 @@ func MainPixelSdk(haUrl string, haToken string) {
 	must("who are you", die.SendWhoAreYou())
 	//red := color.RGBA{255, 0, 0, 255}
 	time.Sleep(3 * time.Second)
-	red := color.RGBA{255, 0, 255, 255}
-	must("blink", die.SendBlink(pixel.BlinkMessage{
+	red := cn.Purple
+	must("blink", die.SendMsg(pixel.MessageBlink{
 		Count:     3,
 		Duration:  1000,
 		Color:     red,
@@ -43,37 +45,38 @@ func MainPixelSdk(haUrl string, haToken string) {
 }
 
 func dieWatcher(die *pixel.Die, haClient *ha.HAClient) {
-	target := "light.blamp"
+	target := conf.HAConfig.LightEntities[0]
 
-	//haClient.HaOffLight(target)
-	//time.Sleep(500 * time.Millisecond)
-	haClient.HaTempLight(2500, target, "turn_on")
+	haClient.LightOff(target)
+	time.Sleep(500 * time.Millisecond)
+	haClient.LightTemperature(target, 2500)
 
 	lastUpdated := die.LastUpdated
 	for true {
 		if die.LastUpdated.After(lastUpdated) {
 			fmt.Printf("Roll: %d\n", die.CurrentFaceValue)
 			if die.CurrentFaceValue == 20 {
-				haClient.HaColorLight(colornames.Purple, target, "turn_on")
-				time.Sleep(500 * time.Millisecond)
-				haClient.HaColorLight(colornames.Green, target, "turn_on")
-				time.Sleep(500 * time.Millisecond)
-				haClient.HaColorLight(colornames.Royalblue, target, "turn_on")
+				haClient.LightCycleColorsEz(target, []color.RGBA{
+					cn.Red,
+					cn.Orange,
+					cn.Yellow,
+					cn.Green,
+					cn.Blue,
+					cn.Indigo,
+					cn.Purple,
+				})
 			} else if die.CurrentFaceValue >= 15 {
-				haClient.HaColorLight(colornames.Blue, target, "turn_on")
+				haClient.LightColor(target, cn.Royalblue)
 			} else if die.CurrentFaceValue >= 5 {
-				haClient.HaColorLight(colornames.Green, target, "turn_on")
+				haClient.LightColor(target, cn.Green)
 			} else if die.CurrentFaceValue > 1 {
-				haClient.HaColorLight(colornames.Red, target, "turn_on")
+				haClient.LightColor(target, cn.Red)
 			} else {
-				haClient.HaColorLight(colornames.Red, target, "turn_on")
-				time.Sleep(500 * time.Millisecond)
-				haClient.HaOffLight(target)
-				time.Sleep(500 * time.Millisecond)
-				haClient.HaColorLight(colornames.Red, target, "turn_on")
+				haClient.LightCycleColors(target, []color.RGBA{cn.Red, cn.Red, cn.Red}, 500*time.Millisecond, true)
 			}
 			lastUpdated = die.LastUpdated
 		}
+		haClient.LightTemperature(target, 2500)
 		time.Sleep(5 * time.Second)
 	}
 

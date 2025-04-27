@@ -1,0 +1,8 @@
+POST {{ha_url}}/api/services/light/turn_on
+Content-Type: application/json
+Authorization: Bearer {{ha_token}}
+
+{
+  "entity_id": "light.work_light"
+
+}

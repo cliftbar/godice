@@ -30,3 +30,4 @@ go.work.sum
 # App Specific
 *.yaml
 !.keep
+*.private.env.json

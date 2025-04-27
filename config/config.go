@@ -6,8 +6,9 @@ import (
 )
 
 type HAConfig struct {
-	Token string `yaml:"token"`
-	URL   string `yaml:"url"`
+	Token         string   `yaml:"token"`
+	URL           string   `yaml:"url"`
+	LightEntities []string `yaml:"light_entities"`
 }
 
 type AppConfig struct {

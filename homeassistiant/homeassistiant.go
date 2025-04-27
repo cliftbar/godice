@@ -212,6 +212,11 @@ func (haClient *HAClient) CallService(domain, service string, data interface{}, 
 		return nil, err
 	}
 
+	if resp.StatusCode != http.StatusOK {
+		bodyTxt, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API request failed with %s: %s", resp.Status, bodyTxt)
+	}
+
 	defer resp.Body.Close()
 
 	var result ServiceResult
@@ -257,10 +262,6 @@ func (haClient *HAClient) UpdateState(entityID string, state *State) (*State, er
 	return &updatedState, err
 }
 
-//func (c *HAClient) get(path string) (*http.Response, error) {
-//	return c.doRequest(http.MethodGet, path, nil)
-//}
-
 func (haClient *HAClient) getRaw(path string) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, haClient.baseURL+path, nil)
 	if err != nil {
@@ -282,12 +283,6 @@ func (haClient *HAClient) getRaw(path string) ([]byte, error) {
 	_, err = buf.ReadFrom(resp.Body)
 	return buf.Bytes(), err
 }
-
-//func (c *HAClient) _post(path string, body interface{}) (*http.Response, error) {
-//	req, err := c.makeRequest(http.MethodPost, path, body)
-//	resp, err := c.httpClient.Do(req)
-//	return c.doRequest(http.MethodPost, path, body)
-//}
 
 func (haClient *HAClient) _doRequest(method, path string, body interface{}) (*http.Response, error) {
 	var buf bytes.Buffer
