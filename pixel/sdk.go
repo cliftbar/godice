@@ -19,15 +19,16 @@ type Die struct {
 	PixelId          uint32
 	CurrentFaceIndex uint8
 	CurrentFaceValue uint8
-	rollState        uint8
+	RollState        uint8
 	batteryLevel     uint8
 	batteryCharging  bool
 	buildTimestamp   uint32
 	designAndColor   uint8
-	LastRolled       time.Time
+	LastRolledState  time.Time
+	rollCallback     func(d *Die)
 }
 
-func WatchForDice(adapter *bluetooth.Adapter, dieChan chan<- *Die) {
+func WatchForDice(adapter *bluetooth.Adapter, dieChan chan<- *Die, rollCallback func(d *Die)) {
 	seenPixelDice := make(map[string]bool)
 	adapter.SetConnectHandler(func(device bluetooth.Device, connected bool) {
 		seenPixelDice[device.Address.String()] = connected
@@ -65,10 +66,11 @@ func WatchForDice(adapter *bluetooth.Adapter, dieChan chan<- *Die) {
 			return
 		}
 		die, _ := ConnectDev(&result, 5*time.Second)
+		die.rollCallback = rollCallback
 		dieChan <- die
 
 		//println(fmt.Sprintf("Connect device: %s", result.Address))
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -168,12 +170,9 @@ func (die *Die) PixelCharacteristicReceiver(buf []byte) {
 		log.Printf("Received IAmADie: %+v", msg)
 	case MsgTypeRollState:
 		msg := parseRollStateMessage(buf)
+		die.readRollStateMessage(msg)
+		die.rollCallback(die)
 		log.Printf("Received RollState: %+v", msg)
-		if msg.RollState == RollStateOnFace || msg.RollState == RollStateRolled {
-			die.CurrentFaceIndex = msg.CurrentFaceIndex
-			die.CurrentFaceValue = msg.CurrentFaceValue
-			die.LastRolled = time.Now()
-		}
 	case MsgTypeBlinkAck:
 		log.Printf("Blink Ack: %x", buf)
 	case MsgTypeBatteryLevel:

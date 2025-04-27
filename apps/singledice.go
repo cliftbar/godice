@@ -1,0 +1,82 @@
+package apps
+
+import (
+	"fmt"
+	"godice/config"
+	ha "godice/homeassistiant"
+	pix "godice/pixel"
+	cn "golang.org/x/image/colornames"
+	"image/color"
+	"time"
+	"tinygo.org/x/bluetooth"
+)
+
+func SingleDiePixelRunner(conf config.AppConfig) {
+	adapter := bluetooth.DefaultAdapter
+	target := conf.HAConfig.LightEntities[0]
+	haClient := ha.NewClient(conf.HAConfig.URL, conf.HAConfig.Token)
+
+	die := &pix.Die{}
+	must("enable BLE stack", adapter.Enable())
+	must("connect", die.Connect(adapter))
+	must("who are you", die.SendMsg(pix.MessageWhoAreYou{}))
+	time.Sleep(3 * time.Second)
+	red := cn.Purple
+	must("blink", die.SendMsg(pix.MessageBlink{
+		Count:     3,
+		Duration:  1000,
+		Color:     red,
+		FaceMask:  0xFFFFFF,
+		Fade:      128,
+		LoopCount: 0,
+	}))
+	go singleDieWatcher(die, haClient, target)
+	select {}
+}
+
+func singleDieWatcher(die *pix.Die, haClient *ha.HAClient, target string) {
+
+	haClient.LightOff(target)
+	time.Sleep(500 * time.Millisecond)
+	haClient.LightTemperature(target, 2500)
+
+	lastUpdated := die.LastRolledState
+	for {
+		if die.LastRolledState.After(lastUpdated) {
+			fmt.Printf("Roll: %d\n", die.CurrentFaceValue)
+			if die.CurrentFaceValue == 20 {
+				haClient.LightCycleColorsEz(target, []color.RGBA{
+					cn.Red,
+					cn.Orange,
+					cn.Yellow,
+					cn.Green,
+					cn.Blue,
+					cn.Indigo,
+					cn.Purple,
+				})
+			} else if die.CurrentFaceValue >= 15 {
+				haClient.LightColor(target, cn.Royalblue)
+			} else if die.CurrentFaceValue >= 10 {
+				haClient.LightColor(target, cn.Green)
+			} else if die.CurrentFaceValue >= 5 {
+				haClient.LightColor(target, cn.Orange)
+			} else if die.CurrentFaceValue > 1 {
+				haClient.LightColor(target, cn.Red)
+			} else {
+				haClient.LightCycleColors(target, []color.RGBA{cn.Red, cn.Red, cn.Red}, 500*time.Millisecond, true)
+			}
+			lastUpdated = die.LastRolledState
+		}
+		time.Sleep(500 * time.Millisecond)
+		haClient.LightTemperature(target, 2500)
+		time.Sleep(5 * time.Second)
+
+	}
+
+}
+
+func must(action string, err error) {
+	if err != nil {
+		panic("failed to " + action + ": " + err.Error())
+	}
+}

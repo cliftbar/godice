@@ -20,8 +20,8 @@ func parseRollStateMessage(buf []byte) MessageRollState {
 }
 
 func (die *Die) readRollStateMessage(msg MessageRollState) {
-	die.rollState = msg.RollState
+	die.RollState = msg.RollState
 	die.CurrentFaceIndex = msg.CurrentFaceIndex
 	die.CurrentFaceValue = msg.CurrentFaceValue
-	die.LastRolled = time.Now()
+	die.LastRolledState = time.Now()
 }

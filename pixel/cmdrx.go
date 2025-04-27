@@ -46,9 +46,9 @@ func (die *Die) readIAmADieMsg(msg MessageIAmADie) {
 	die.designAndColor = msg.DesignAndColor
 	die.CurrentFaceIndex = msg.CurrentFaceIndex
 	die.CurrentFaceValue = msg.CurrentFaceValue
-	die.rollState = msg.RollState
+	die.RollState = msg.RollState
 	die.batteryLevel = msg.BatteryLevel
 	die.buildTimestamp = msg.BuildTimestamp
 	die.batteryCharging = msg.BatteryState == BattStateCharging
-	die.LastRolled = time.Now()
+	die.LastRolledState = time.Now()
 }
